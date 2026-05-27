@@ -337,7 +337,7 @@ export function Dashboard() {
               </button>
             </div>
 
-            <div style={s.shareStrip}>
+            <div style={s.shareRow}>
               {shareSlug ? (
                 <button style={s.shareBtn} onClick={copyLink}>
                   <i className="ti ti-link" /> {copied ? 'Link copied!' : 'Copy share link'}
@@ -347,11 +347,9 @@ export function Dashboard() {
                   <i className="ti ti-share" /> Generate share link
                 </button>
               )}
-            </div>
 
-            <div style={s.ssRow}>
-              <button style={s.ssBtn} onClick={ssTrigger}>
-                <i className="ti ti-moon" /> Screensaver
+              <button style={s.ssBtnInline} onClick={ssTrigger}>
+                <i className="ti ti-moon" />
               </button>
             </div>
           </div>
@@ -486,8 +484,9 @@ const s: Record<string, React.CSSProperties> = {
   repeatBtn:    { width: 48, height: 48, borderRadius: 14, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 18, transition: 'background-color 0.2s ease, color 0.2s ease' },
   skipBtn:      { background: 'none', border: 'none', color: 'rgba(232,228,220,0.5)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 22 },
   skipLabel:    { fontSize: 10, fontFamily: "'DM Mono', monospace", color: 'rgba(232,228,220,0.3)' },
-  shareStrip:   { padding: '8px 20px 32px' },
-  shareBtn:     { width: '100%', padding: '14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(232,228,220,0.7)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  shareRow:     { display: 'flex', gap: 10, alignItems: 'center', padding: '8px 20px 24px' },
+  shareBtn:     { flex: 1, padding: '12px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(232,228,220,0.7)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
   ssRow:        { display: 'flex', justifyContent: 'center', paddingBottom: 8 },
   ssBtn:        { background: 'none', border: 'none', color: 'rgba(232,228,220,0.25)', fontSize: 12, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px' },
+  ssBtnInline:  { background: 'none', border: '0.5px solid rgba(255,255,255,0.06)', color: 'rgba(232,228,220,0.6)', fontSize: 16, cursor: 'pointer', fontFamily: "'Syne',sans-serif", borderRadius: 10, padding: '10px 12px' },
 };
