@@ -138,14 +138,26 @@ export function Dashboard() {
     durationMs: activeVersion?.duration_ms ?? 0,
     track,
     onEnded: () => {
+      // If repeat mode is ON, replay the current track instead of advancing.
+      if (repeatMode) {
+        try {
+          audioControls?.seekTo(0);
+          audioControls?.play();
+        } catch (e) {
+          // fallback: re-open same project to reset playback
+          if (activeProject) openPlayer(activeProject);
+        }
+        return;
+      }
+
+      // Repeat is OFF: advance to the next track if available.
       const currentIndex = projects.findIndex(p => p.id === activeProject?.id);
       if (currentIndex === -1) return;
       const nextIndex = currentIndex + 1;
       if (nextIndex < projects.length) {
         openPlayer(projects[nextIndex]);
-      } else if (repeatMode && projects.length > 0) {
-        openPlayer(projects[0]);
       }
+      // If at end of list and repeat is off, do nothing (playback stops).
     },
   });
 
