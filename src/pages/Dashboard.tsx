@@ -12,9 +12,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { useAudioEngine } from '../hooks/useAudioEngine';
 import { Waveform } from '../components/Waveform';
-import { Screensaver } from '../components/Screensaver';
-import { useWaveformAnalyser } from '../hooks/useWaveformAnalyser';
-import { useScreensaver } from '../hooks/useScreensaver';
 import { nanoid } from 'nanoid';
 
 interface Project {
@@ -68,11 +65,7 @@ export function Dashboard() {
   const [copied, setCopied]           = useState(false);
   const [view, setView]               = useState<'list' | 'player'>('list');
   const [menuOpen, setMenuOpen]       = useState(false);
-  const [visualUrl, setVisualUrl]     = useState<string | null>(null);
-  const [visualIsVideo, setVisualIsVideo] = useState(false);
-  const [repeatOne, setRepeatOne]     = useState(false);
-  const [repeatAll, setRepeatAll]     = useState(false);
-  const screensaver = useScreensaver();
+
   const { track } = useAnalytics(
     activeVersion ? { versionId: activeVersion.id, sessionId: SESSION_ID } : null
   );
@@ -82,9 +75,6 @@ export function Dashboard() {
     durationMs: activeVersion?.duration_ms ?? 0,
     track,
   });
-
-  // Real waveform from audio data — analyses in browser, cached per session
-  const { peaks, analysing } = useWaveformAnalyser(audioUrl);
 
   useEffect(() => {
     supabase
@@ -127,50 +117,7 @@ export function Dashboard() {
       .eq('is_active', true)
       .maybeSingle();
     setShareSlug(link?.slug ?? null);
-
-    // Load project visual for screensaver
-    setVisualUrl(null);
-    const { data: visual } = await supabase
-      .from('project_visuals')
-      .select('storage_path, is_video')
-      .or(`project_id.eq.${project.id},is_default.eq.true`)
-      .order('is_default', { ascending: true }) // prefer project-specific over default
-      .limit(1)
-      .maybeSingle();
-
-    if (visual) {
-      setVisualIsVideo(visual.is_video);
-      // visuals bucket is public so no signed URL needed
-      const { data: { publicUrl } } = supabase.storage
-        .from('visuals')
-        .getPublicUrl(visual.storage_path);
-      setVisualUrl(publicUrl);
-    }
   }, []);
-
-  const playNext = useCallback((currentProject: Project) => {
-    const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-    const nextProject  = projects[currentIndex + 1];
-    if (nextProject) openPlayer(nextProject);
-  }, [projects, openPlayer]);
-
-  // Auto-play next when track completes
-  useEffect(() => {
-    if (!audioState.playing && audioState.positionMs > 0 &&
-        audioState.durationMs > 0 &&
-        audioState.positionMs >= audioState.durationMs - 500) {
-      if (repeatOne && activeProject) {
-        // Seek back to start and replay
-        audioControls.seekTo(0);
-        setTimeout(() => audioControls.play(), 100);
-      } else if (repeatAll && activeProject) {
-        playNext(activeProject);
-      } else if (activeProject) {
-        playNext(activeProject);
-      }
-    }
-  }, [audioState.playing, audioState.positionMs, audioState.durationMs,
-      repeatOne, repeatAll, activeProject, audioControls, playNext]);
 
   const createShareLink = async () => {
     if (!activeProject) return;
@@ -199,157 +146,108 @@ export function Dashboard() {
 
   // ── PLAYER VIEW ──────────────────────────────────────────────
   if (view === 'player' && activeProject && activeVersion) {
-    const { opacity: ssOpacity, uiOpacity, trigger: ssTrigger, dismiss: ssDismiss } = screensaver;
+    const progress = audioState.durationMs
+      ? (audioState.positionMs / audioState.durationMs) * 100
+      : 0;
 
     return (
-      <div
-        style={{ ...s.page, position: 'relative', overflow: 'hidden', minHeight: '100vh', background: '#000' }}
-        onClick={uiOpacity < 0.5 ? ssDismiss : undefined}
-      >
-        {/* ── Layer 0: Screensaver — always behind everything ── */}
-        <Screensaver
-          visualUrl={visualUrl}
-          isVideo={visualIsVideo}
-          opacity={ssOpacity}
-          uiOpacity={uiOpacity}
-        />
+      <div style={s.page}>
+        {/* Top bar */}
+        <div style={s.topbar}>
+          <button style={s.backBtn} onClick={goBack}>
+            <i className="ti ti-chevron-left" /> Back
+          </button>
+          <div style={s.topbarTitle}>Now playing</div>
+          <button style={s.menuBtn} onClick={() => setMenuOpen(m => !m)}>
+            <i className="ti ti-dots" />
+          </button>
+        </div>
 
-        {/* ── Layer 1: UI elements that FADE OUT ── */}
-        <div style={{ position: 'relative', zIndex: 2, opacity: uiOpacity, transition: 'opacity 0.5s ease', pointerEvents: uiOpacity < 0.1 ? 'none' : 'auto' }}>
-
-          {/* Top bar */}
-          <div style={s.topbar}>
-            <button style={s.backBtn} onClick={goBack}>
-              <i className="ti ti-chevron-left" /> Back
-            </button>
-            <div style={s.topbarTitle}>Now playing</div>
-            <button style={s.menuBtn} onClick={() => setMenuOpen(m => !m)}>
-              <i className="ti ti-dots" />
+        {/* Dropdown menu */}
+        {menuOpen && (
+          <div style={s.dropdown}>
+            {shareSlug ? (
+              <button style={s.dropItem} onClick={() => { copyLink(); setMenuOpen(false); }}>
+                {copied ? '✓ Link copied!' : '🔗 Copy share link'}
+              </button>
+            ) : (
+              <button style={s.dropItem} onClick={() => { createShareLink(); setMenuOpen(false); }}>
+                🔗 Generate share link
+              </button>
+            )}
+            <button style={s.dropItem} onClick={() => { signOut(); }}>
+              Sign out
             </button>
           </div>
+        )}
 
-          {/* Dropdown menu */}
-          {menuOpen && (
-            <div style={s.dropdown}>
-              {shareSlug ? (
-                <button style={s.dropItem} onClick={() => { copyLink(); setMenuOpen(false); }}>
-                  {copied ? '✓ Link copied!' : '🔗 Copy share link'}
-                </button>
-              ) : (
-                <button style={s.dropItem} onClick={() => { createShareLink(); setMenuOpen(false); }}>
-                  🔗 Generate share link
-                </button>
-              )}
-              <button style={s.dropItem} onClick={signOut}>Sign out</button>
-            </div>
-          )}
-
-          {/* Art / title area */}
-          <div style={s.artArea}>
-            <div style={s.artPlaceholder}>
-              <span style={s.artInitial}>{activeProject.title[0]}</span>
-            </div>
-          </div>
-
-          {/* Track info */}
-          <div style={s.trackInfo}>
-            <div style={s.trackTitle}>{activeProject.title}</div>
-            <div style={s.trackSub}>
-              {activeVersion.is_spatial && <span style={s.spatialDot}>● Spatial · </span>}
-              Updated {timeAgo(activeProject.updated_at)}
-            </div>
+        {/* Art / title area */}
+        <div style={s.artArea}>
+          <div style={s.artPlaceholder}>
+            <span style={s.artInitial}>{activeProject.title[0]}</span>
           </div>
         </div>
 
-        {/* ── Layer 2: Waveform — always on top ── */}
-        <div style={{ position: 'relative', zIndex: 3, padding: '0 20px 4px' }}>
+        {/* Track info */}
+        <div style={s.trackInfo}>
+          <div style={s.trackTitle}>{activeProject.title}</div>
+          <div style={s.trackSub}>
+            {activeVersion.is_spatial && <span style={s.spatialDot}>● Spatial · </span>}
+            Updated {timeAgo(activeProject.updated_at)}
+          </div>
+        </div>
+
+        {/* Waveform */}
+        <div style={s.waveWrap}>
           <Waveform
-            peaks={peaks}
-            analysing={analysing}
+            peaks={activeVersion.waveform_peaks ?? Array(80).fill(0).map((_, i) => 0.3 + Math.sin(i * 0.4) * 0.3 + Math.random() * 0.3)}
             positionMs={audioState.positionMs}
             durationMs={audioState.durationMs || activeVersion.duration_ms}
             bufferedPct={audioState.bufferedPct}
             onSeek={audioControls.seekTo}
             height={56}
           />
-          <div style={{ ...s.timeRow, opacity: uiOpacity, transition: 'opacity 0.5s ease' }}>
+          <div style={s.timeRow}>
             <span style={s.timeLabel}>{fmtTime(audioState.positionMs)}</span>
             <span style={s.timeLabel}>{fmtTime(audioState.durationMs || activeVersion.duration_ms)}</span>
           </div>
         </div>
 
-        {/* ── Layer 3: Transport — all on one row, always on top ── */}
-        <div style={{ position: 'relative', zIndex: 3, padding: '20px 24px 8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        {/* Transport */}
+        <div style={s.transport}>
+          <button style={s.skipBtn} onClick={() => audioControls.seekTo(Math.max(0, audioState.positionMs - 15000))}>
+            <i className="ti ti-player-skip-back" />
+            <span style={s.skipLabel}>15</span>
+          </button>
 
-            {/* Repeat one */}
-            <button
-              style={{ ...s.repeatBtn, color: repeatOne ? '#c9f55e' : 'rgba(232,228,220,0.3)' }}
-              onClick={() => { setRepeatOne(r => !r); setRepeatAll(false); }}
-              title="Repeat one"
-            >
-              <i className="ti ti-repeat-once" style={{ fontSize: 18 }} />
-            </button>
+          <button style={s.playBtn} onClick={audioControls.toggle} disabled={audioState.loading}>
+            {audioState.loading
+              ? <span style={{ fontSize: 14 }}>…</span>
+              : audioState.playing
+                ? <i className="ti ti-player-pause-filled" style={{ fontSize: 28 }} />
+                : <i className="ti ti-player-play-filled" style={{ fontSize: 28, marginLeft: 3 }} />}
+          </button>
 
-            {/* Skip back 15 */}
-            <button style={s.skipBtn} onClick={() => audioControls.seekTo(Math.max(0, audioState.positionMs - 15000))}>
-              <i className="ti ti-player-skip-back" style={{ fontSize: 20 }} />
-              <span style={s.skipLabel}>15</span>
-            </button>
-
-            {/* Play / pause */}
-            <button style={s.playBtn} onClick={audioControls.toggle} disabled={audioState.loading}>
-              {audioState.loading
-                ? <span style={{ fontSize: 14 }}>…</span>
-                : audioState.playing
-                  ? <i className="ti ti-player-pause-filled" style={{ fontSize: 28 }} />
-                  : <i className="ti ti-player-play-filled" style={{ fontSize: 28, marginLeft: 3 }} />}
-            </button>
-
-            {/* Skip forward 15 */}
-            <button style={s.skipBtn} onClick={() => audioControls.seekTo(Math.min(audioState.durationMs, audioState.positionMs + 15000))}>
-              <i className="ti ti-player-skip-forward" style={{ fontSize: 20 }} />
-              <span style={s.skipLabel}>15</span>
-            </button>
-
-            {/* Repeat all */}
-            <button
-              style={{ ...s.repeatBtn, color: repeatAll ? '#c9f55e' : 'rgba(232,228,220,0.3)' }}
-              onClick={() => { setRepeatAll(r => !r); setRepeatOne(false); }}
-              title="Repeat all"
-            >
-              <i className="ti ti-repeat" style={{ fontSize: 18 }} />
-            </button>
-
-          </div>
+          <button style={s.skipBtn} onClick={() => audioControls.seekTo(Math.min(audioState.durationMs, audioState.positionMs + 15000))}>
+            <i className="ti ti-player-skip-forward" />
+            <span style={s.skipLabel}>15</span>
+          </button>
         </div>
 
-        {/* ── Layer 4: Share + screensaver — fade out ── */}
-        <div style={{ position: 'relative', zIndex: 2, opacity: uiOpacity, transition: 'opacity 0.5s ease', pointerEvents: uiOpacity < 0.1 ? 'none' : 'auto' }}>
-          <div style={s.shareStrip}>
-            {shareSlug ? (
-              <button style={s.shareBtn} onClick={copyLink}>
-                <i className="ti ti-link" /> {copied ? 'Link copied!' : 'Copy share link'}
-              </button>
-            ) : (
-              <button style={s.shareBtn} onClick={createShareLink}>
-                <i className="ti ti-share" /> Generate share link
-              </button>
-            )}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 8 }}>
-            <button style={s.ssBtn} onClick={ssTrigger}>
-              <i className="ti ti-moon" /> Screensaver
+        {/* Share strip */}
+        <div style={s.shareStrip}>
+          {shareSlug ? (
+            <button style={s.shareBtn} onClick={copyLink}>
+              <i className="ti ti-link" /> {copied ? 'Link copied!' : 'Copy share link'}
             </button>
-          </div>
+          ) : (
+            <button style={s.shareBtn} onClick={createShareLink}>
+              <i className="ti ti-share" /> Generate share link
+            </button>
+          )}
         </div>
-        {ssOpacity > 0.7 && (
-          <div style={{ position: 'fixed', bottom: 48, left: 0, right: 0, zIndex: 4, textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, fontFamily: "'Syne',sans-serif", letterSpacing: '0.05em', pointerEvents: 'none' }}>
-            Tap to return
-          </div>
-        )}
 
-        {audioState.error && <p style={{ color: '#ff6b6b', textAlign: 'center', fontSize: 12, position: 'relative', zIndex: 3 }}>{audioState.error}</p>}
+        {audioState.error && <p style={{ color: '#ff6b6b', textAlign: 'center', fontSize: 12 }}>{audioState.error}</p>}
       </div>
     );
   }
@@ -482,10 +380,8 @@ const s: Record<string, React.CSSProperties> = {
   playBtn:      { width: 72, height: 72, borderRadius: '50%', background: '#c9f55e', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0a0a0b', flexShrink: 0 },
   skipBtn:      { background: 'none', border: 'none', color: 'rgba(232,228,220,0.5)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 22 },
   skipLabel:    { fontSize: 10, fontFamily: "'DM Mono', monospace", color: 'rgba(232,228,220,0.3)' },
-  repeatBtn:    { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 8, transition: 'color 0.15s' },
 
   // Share
   shareStrip:   { padding: '8px 20px 32px' },
   shareBtn:     { width: '100%', padding: '14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(232,228,220,0.7)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  ssBtn:        { background: 'none', border: 'none', color: 'rgba(232,228,220,0.25)', fontSize: 12, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px' },
 };
