@@ -7,28 +7,53 @@ import { ShareLinkPlayer } from './pages/ShareLinkPlayer';
 function AppRoutes() {
   const { session, loading } = useAuth();
 
-  if (loading) return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', color:'rgba(232,228,220,0.3)', fontFamily:"'Syne',sans-serif" }}>
-      Loading…
-    </div>
-  );
-
   return (
     <Routes>
-      {/* Public share link — always accessible, no login needed */}
+      {/* Public share link — renders immediately, no auth check at all */}
       <Route path="/p/:slug" element={<ShareLinkPlayer />} />
-      {/* Private dashboard — redirect to login if not authed */}
-      <Route path="/*" element={session ? <Dashboard /> : <LoginPage />} />
+
+      {/* Private routes — wait for auth */}
+      <Route path="/*" element={
+        loading
+          ? <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh' }}>
+              <div style={{ width:24, height:24, border:'2px solid rgba(255,255,255,0.1)', borderTop:'2px solid #c9f55e', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+            </div>
+          : session ? <Dashboard /> : <LoginPage />
+      } />
     </Routes>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter>
+      <Routes>
+        {/* Share link is OUTSIDE AuthProvider entirely — zero auth overhead */}
+        <Route path="/p/:slug" element={<ShareLinkPlayer />} />
+
+        {/* Everything else goes through auth */}
+        <Route path="/*" element={
+          <AuthProvider>
+            <AuthRoutes />
+          </AuthProvider>
+        } />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function AuthRoutes() {
+  const { session, loading } = useAuth();
+
+  if (loading) return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#0a0a0b' }}>
+      <div style={{ width:24, height:24, border:'2px solid rgba(255,255,255,0.1)', borderTop:'2px solid #c9f55e', borderRadius:'50%', animation:'spin 0.8s linear infinite' }} />
+    </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/*" element={session ? <Dashboard /> : <LoginPage />} />
+    </Routes>
   );
 }
