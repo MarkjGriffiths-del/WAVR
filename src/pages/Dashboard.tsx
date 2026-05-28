@@ -173,12 +173,6 @@ export function Dashboard() {
     }
   }, []);
 
-  const playNext = useCallback((currentProject: Project) => {
-    const currentIndex = projects.findIndex(p => p.id === currentProject.id);
-    const nextProject  = projects[currentIndex + 1];
-    if (nextProject) openPlayer(nextProject);
-  }, [projects, openPlayer]);
-
   const createShareLink = async () => {
     if (!activeProject) return;
     const slug = nanoid(8);
@@ -298,10 +292,16 @@ export function Dashboard() {
               <i className="ti ti-repeat-once" style={{ fontSize: 18 }} />
             </button>
 
-            {/* Skip back 15 */}
-            <button style={s.skipBtn} onClick={() => audioControls.seekTo(Math.max(0, audioState.positionMs - 15000))}>
-              <i className="ti ti-player-skip-back" style={{ fontSize: 20 }} />
-              <span style={s.skipLabel}>15</span>
+            {/* Previous track */}
+            <button
+              style={{ ...s.skipBtn, opacity: projects.findIndex(p => p.id === activeProject.id) === 0 ? 0.2 : 1 }}
+              onClick={() => {
+                const i = projects.findIndex(p => p.id === activeProject.id);
+                if (i > 0) openPlayer(projects[i - 1], true);
+              }}
+              title="Previous track"
+            >
+              <i className="ti ti-player-track-prev-filled" style={{ fontSize: 24 }} />
             </button>
 
             {/* Play / pause */}
@@ -313,10 +313,17 @@ export function Dashboard() {
                   : <i className="ti ti-player-play-filled" style={{ fontSize: 28, marginLeft: 3 }} />}
             </button>
 
-            {/* Skip forward 15 */}
-            <button style={s.skipBtn} onClick={() => audioControls.seekTo(Math.min(audioState.durationMs, audioState.positionMs + 15000))}>
-              <i className="ti ti-player-skip-forward" style={{ fontSize: 20 }} />
-              <span style={s.skipLabel}>15</span>
+            {/* Next track */}
+            <button
+              style={{ ...s.skipBtn, opacity: projects.findIndex(p => p.id === activeProject.id) === projects.length - 1 && !repeatAll ? 0.2 : 1 }}
+              onClick={() => {
+                const i = projects.findIndex(p => p.id === activeProject.id);
+                const next = repeatAll ? projects[(i + 1) % projects.length] : projects[i + 1];
+                if (next) openPlayer(next, true);
+              }}
+              title="Next track"
+            >
+              <i className="ti ti-player-track-next-filled" style={{ fontSize: 24 }} />
             </button>
 
             {/* Repeat all */}
