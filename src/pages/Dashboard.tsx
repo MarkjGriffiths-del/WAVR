@@ -192,8 +192,7 @@ export function Dashboard() {
     const { opacity: ssOpacity, uiOpacity, trigger: ssTrigger, dismiss: ssDismiss } = screensaver;
 
     return (
-      <div style={{ ...s.page, position: 'relative', overflow: 'hidden', minHeight: '100vh', background: '#000' }}
-        onClick={uiOpacity < 0.5 ? ssDismiss : undefined}>
+      <div style={{ ...s.page, position: 'relative', overflow: 'hidden', minHeight: '100vh', background: '#000' }}>
 
         <Screensaver visualUrl={visualUrl} isVideo={visualIsVideo} opacity={ssOpacity} uiOpacity={uiOpacity} />
 
@@ -293,9 +292,13 @@ export function Dashboard() {
           </div>
         </div>
 
-        {ssOpacity > 0.7 && (
-          <div style={{ position: 'fixed', bottom: 48, left: 0, right: 0, zIndex: 4, textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, pointerEvents: 'none' }}>
-            Tap to return
+        {ssOpacity > 0.5 && (
+          <div
+            onClick={ssDismiss}
+            style={{ position: 'fixed', bottom: 48, left: 0, right: 0, zIndex: 10, textAlign: 'center', cursor: 'pointer', padding: '12px', pointerEvents: 'auto' }}>
+            <span style={{ color: `rgba(255,255,255,${(ssOpacity - 0.5) * 2 * 0.5})`, fontSize: 13, fontFamily: "'Syne',sans-serif", letterSpacing: '0.08em' }}>
+              Tap to return
+            </span>
           </div>
         )}
         {audioState.error && <p style={{ color: '#ff6b6b', textAlign: 'center', fontSize: 12, position: 'relative', zIndex: 3 }}>{audioState.error}</p>}
