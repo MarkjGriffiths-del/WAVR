@@ -35,36 +35,33 @@ export function useScreensaver() {
     if (idleTimer.current) clearTimeout(idleTimer.current);
   }, [stopFade]);
 
-  const startFade = useCallback(() => {
+  const startFade = useCallback((duration = FADE_DURATION_MS) => {
     fadeStart.current = Date.now();
     stopFade();
     fadeTimer.current = setInterval(() => {
       const elapsed    = Date.now() - fadeStart.current;
-      const progress   = Math.min(1, elapsed / FADE_DURATION_MS);
-      // Visual: BASE_OPACITY → 1.0
+      const progress   = Math.min(1, elapsed / duration);
       const newOpacity = BASE_OPACITY + (1 - BASE_OPACITY) * progress;
-      // UI elements: 1.0 → 0.0 (start fading after visual hits ~40%)
       const uiFade     = Math.max(0, 1 - (progress * 1.6));
       opacityRef.current = newOpacity;
       setOpacity(newOpacity);
       setUiOpacity(uiFade);
       if (progress >= 1) stopFade();
-    }, 50);
+    }, 16); // 60fps for smooth fast fade
   }, [stopFade]);
 
   const resetIdle = useCallback(() => {
-    // Any touch while fading → dismiss back to base
     if (opacityRef.current > BASE_OPACITY + 0.02) {
       dismiss();
       return;
     }
     if (idleTimer.current) clearTimeout(idleTimer.current);
-    idleTimer.current = setTimeout(startFade, IDLE_START_MS);
+    idleTimer.current = setTimeout(() => startFade(FADE_DURATION_MS), IDLE_START_MS);
   }, [dismiss, startFade]);
 
   const trigger = useCallback(() => {
     if (idleTimer.current) clearTimeout(idleTimer.current);
-    startFade();
+    startFade(500); // 500ms fast fade on manual trigger
   }, [startFade]);
 
   useEffect(() => {
