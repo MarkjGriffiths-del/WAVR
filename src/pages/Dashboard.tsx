@@ -226,41 +226,55 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Waveform — always on top */}
-        <div style={{ position: 'relative', zIndex: 3, padding: '0 20px 4px' }}>
+        {/* Waveform — fades with screensaver */}
+        <div style={{ position: 'relative', zIndex: 3, padding: '0 20px 4px', opacity: 0.3 + uiOpacity * 0.7, transition: 'opacity 0.5s ease' }}>
           <Waveform peaks={peaks} analysing={analysing}
             positionMs={audioState.positionMs}
             durationMs={audioState.durationMs || activeVersion.duration_ms}
             bufferedPct={audioState.bufferedPct}
-            onSeek={audioControls.seekTo} height={56} />
+            onSeek={audioControls.seekTo} height={56}
+            accentColor={`rgba(255, 255, 255, ${0.3 + uiOpacity * 0.6})`}
+          />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, opacity: uiOpacity, transition: 'opacity 0.5s ease' }}>
             <span style={s.timeLabel}>{fmtTime(audioState.positionMs)}</span>
             <span style={s.timeLabel}>{fmtTime(audioState.durationMs || activeVersion.duration_ms)}</span>
           </div>
         </div>
 
-        {/* Transport — always on top */}
+        {/* Transport — play button fades to ghost */}
         <div style={{ position: 'relative', zIndex: 3, padding: '20px 24px 8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <button style={{ ...s.repeatBtn, color: repeatOne ? '#c9f55e' : 'rgba(232,228,220,0.3)' }}
+            <button style={{ ...s.repeatBtn, color: repeatOne ? `rgba(255,255,255,${0.4 + uiOpacity * 0.6})` : `rgba(255,255,255,${0.15 + uiOpacity * 0.2})` }}
               onClick={() => { setRepeatOne(r => !r); setRepeatAll(false); }}>
               <i className="ti ti-repeat-once" style={{ fontSize: 18 }} />
             </button>
-            <button style={{ ...s.skipBtn, opacity: projects.findIndex(p => p.id === activeProject.id) === 0 ? 0.2 : 1 }}
+            <button style={{ ...s.skipBtn, opacity: projects.findIndex(p => p.id === activeProject.id) === 0 ? 0.1 + uiOpacity * 0.2 : 0.2 + uiOpacity * 0.4, color: 'rgba(255,255,255,0.8)', transition: 'opacity 0.5s ease' }}
               onClick={() => { const i = projects.findIndex(p => p.id === activeProject.id); if (i > 0) openPlayer(projects[i - 1], true); }}>
               <i className="ti ti-player-track-prev-filled" style={{ fontSize: 24 }} />
             </button>
-            <button style={s.playBtn} onClick={audioControls.toggle} disabled={audioState.loading}>
+
+            {/* Play button — transparent background, white icon, fades gracefully */}
+            <button
+              style={{
+                ...s.playBtn,
+                background: `rgba(255,255,255,${0.08 + uiOpacity * 0.12})`,
+                border: `1.5px solid rgba(255,255,255,${0.15 + uiOpacity * 0.25})`,
+                color: `rgba(255,255,255,${0.4 + uiOpacity * 0.6})`,
+                backdropFilter: 'blur(8px)',
+                transition: 'background 0.5s ease, border 0.5s ease, color 0.5s ease',
+              }}
+              onClick={audioControls.toggle} disabled={audioState.loading}>
               {audioState.loading ? <span style={{ fontSize: 14 }}>…</span>
                 : audioState.playing
                   ? <i className="ti ti-player-pause-filled" style={{ fontSize: 28 }} />
                   : <i className="ti ti-player-play-filled" style={{ fontSize: 28, marginLeft: 3 }} />}
             </button>
-            <button style={{ ...s.skipBtn, opacity: projects.findIndex(p => p.id === activeProject.id) === projects.length - 1 && !repeatAll ? 0.2 : 1 }}
+
+            <button style={{ ...s.skipBtn, opacity: projects.findIndex(p => p.id === activeProject.id) === projects.length - 1 && !repeatAll ? 0.1 + uiOpacity * 0.2 : 0.2 + uiOpacity * 0.4, color: 'rgba(255,255,255,0.8)', transition: 'opacity 0.5s ease' }}
               onClick={() => { const i = projects.findIndex(p => p.id === activeProject.id); const next = repeatAll ? projects[(i + 1) % projects.length] : projects[i + 1]; if (next) openPlayer(next, true); }}>
               <i className="ti ti-player-track-next-filled" style={{ fontSize: 24 }} />
             </button>
-            <button style={{ ...s.repeatBtn, color: repeatAll ? '#c9f55e' : 'rgba(232,228,220,0.3)' }}
+            <button style={{ ...s.repeatBtn, color: repeatAll ? `rgba(255,255,255,${0.4 + uiOpacity * 0.6})` : `rgba(255,255,255,${0.15 + uiOpacity * 0.2})` }}
               onClick={() => { setRepeatAll(r => !r); setRepeatOne(false); }}>
               <i className="ti ti-repeat" style={{ fontSize: 18 }} />
             </button>
@@ -293,7 +307,7 @@ export function Dashboard() {
   return (
     <div style={s.page}>
       <div style={s.topbar}>
-        <div style={s.logo}>WAV<span style={{ color: '#c9f55e' }}>R</span></div>
+        <div style={s.logo}>WAVR</div>
         <div style={s.topbarRight}>
           <span style={s.userEmail}>{user?.email?.split('@')[0]}</span>
           <button style={s.signOutBtn} onClick={signOut}>Sign out</button>
@@ -359,40 +373,40 @@ const s: Record<string, React.CSSProperties> = {
   topbarRight:  { display: 'flex', alignItems: 'center', gap: 12 },
   userEmail:    { fontSize: 12, color: 'rgba(232,228,220,0.3)' },
   signOutBtn:   { background: 'none', border: '0.5px solid rgba(255,255,255,0.12)', borderRadius: 6, color: 'rgba(232,228,220,0.4)', fontSize: 12, padding: '5px 10px', cursor: 'pointer', fontFamily: "'Syne',sans-serif" },
-  backBtn:      { display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'rgba(232,228,220,0.5)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", padding: 0 },
-  topbarTitle:  { fontSize: 13, color: 'rgba(232,228,220,0.4)', fontWeight: 600 },
-  menuBtn:      { background: 'none', border: 'none', color: 'rgba(232,228,220,0.5)', fontSize: 20, cursor: 'pointer', padding: '0 4px' },
+  backBtn:      { display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", padding: 0 },
+  topbarTitle:  { fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 600 },
+  menuBtn:      { background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', fontSize: 20, cursor: 'pointer', padding: '0 4px' },
   dropdown:     { position: 'absolute', top: 60, right: 16, background: '#1a1a1b', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, zIndex: 100, overflow: 'hidden', minWidth: 200 },
-  dropItem:     { display: 'block', width: '100%', padding: '14px 18px', background: 'none', border: 'none', borderBottom: '0.5px solid rgba(255,255,255,0.06)', color: 'rgba(232,228,220,0.8)', fontSize: 14, textAlign: 'left', cursor: 'pointer', fontFamily: "'Syne',sans-serif" },
-  miniBar:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'rgba(201,245,94,0.06)', borderBottom: '0.5px solid rgba(201,245,94,0.15)', cursor: 'pointer' },
+  dropItem:     { display: 'block', width: '100%', padding: '14px 18px', background: 'none', border: 'none', borderBottom: '0.5px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.8)', fontSize: 14, textAlign: 'left', cursor: 'pointer', fontFamily: "'Syne',sans-serif" },
+  miniBar:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 20px', background: 'rgba(255,255,255,0.04)', borderBottom: '0.5px solid rgba(255,255,255,0.08)', cursor: 'pointer' },
   miniBarLeft:  { display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 },
-  miniDot:      { width: 8, height: 8, borderRadius: '50%', background: '#c9f55e', flexShrink: 0 },
+  miniDot:      { width: 8, height: 8, borderRadius: '50%', background: 'rgba(255,255,255,0.6)', flexShrink: 0 },
   miniTitle:    { fontSize: 13, fontWeight: 700, color: '#e8e4dc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   miniControls: { display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 },
   miniTime:     { fontSize: 12, color: 'rgba(232,228,220,0.4)', fontFamily: "'DM Mono', monospace" },
-  miniPlay:     { background: 'none', border: 'none', color: '#c9f55e', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center' },
+  miniPlay:     { background: 'none', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center' },
   list:         { flex: 1, padding: '8px 0 100px' },
   listLabel:    { fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: 'rgba(232,228,220,0.25)', padding: '16px 20px 8px', textTransform: 'uppercase' },
   empty:        { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', color: 'rgba(232,228,220,0.3)', fontSize: 14, textAlign: 'center' },
   trackRow:     { display: 'flex', alignItems: 'center', gap: 14, padding: '12px 20px', cursor: 'pointer', borderBottom: '0.5px solid rgba(255,255,255,0.04)' },
-  trackRowActive: { background: 'rgba(201,245,94,0.04)' },
+  trackRowActive: { background: 'rgba(255,255,255,0.04)' },
   trackAvatar:  { width: 44, height: 44, borderRadius: 10, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' },
   trackRowInfo: { flex: 1, minWidth: 0 },
   trackRowTitle: { fontSize: 14, fontWeight: 700, marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   trackRowMeta: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 11, color: 'rgba(232,228,220,0.35)' },
   trackRowDur:  { fontSize: 12, color: 'rgba(232,228,220,0.3)', fontFamily: "'DM Mono', monospace", flexShrink: 0 },
-  spatialTag:   { background: 'rgba(167,139,250,0.1)', color: '#a78bfa', border: '0.5px solid rgba(167,139,250,0.25)', borderRadius: 3, padding: '1px 6px', fontSize: 10 },
+  spatialTag:   { background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 3, padding: '1px 6px', fontSize: 10 },
   artArea:      { display: 'flex', justifyContent: 'center', padding: '32px 20px 24px' },
-  artPlaceholder: { width: 200, height: 200, borderRadius: 20, background: 'linear-gradient(135deg, rgba(201,245,94,0.15), rgba(167,139,250,0.1))', border: '0.5px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  artInitial:   { fontSize: 72, fontWeight: 800, color: 'rgba(232,228,220,0.15)', letterSpacing: '-0.05em' },
+  artPlaceholder: { width: 200, height: 200, borderRadius: 20, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  artInitial:   { fontSize: 72, fontWeight: 800, color: 'rgba(255,255,255,0.08)', letterSpacing: '-0.05em' },
   trackInfo:    { padding: '0 24px 20px', textAlign: 'center' },
-  trackTitle:   { fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 6 },
-  trackSub:     { fontSize: 12, color: 'rgba(232,228,220,0.35)' },
-  timeLabel:    { fontSize: 11, color: 'rgba(232,228,220,0.3)', fontFamily: "'DM Mono', monospace" },
-  playBtn:      { width: 72, height: 72, borderRadius: '50%', background: '#c9f55e', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0a0a0b', flexShrink: 0 },
-  skipBtn:      { background: 'none', border: 'none', color: 'rgba(232,228,220,0.5)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 22 },
+  trackTitle:   { fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 6, color: '#e8e4dc' },
+  trackSub:     { fontSize: 12, color: 'rgba(255,255,255,0.3)' },
+  timeLabel:    { fontSize: 11, color: 'rgba(255,255,255,0.25)', fontFamily: "'DM Mono', monospace" },
+  playBtn:      { width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.1)', border: '1.5px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.9)', flexShrink: 0, backdropFilter: 'blur(8px)' },
+  skipBtn:      { background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 22 },
   repeatBtn:    { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 8 },
   shareStrip:   { padding: '8px 20px 12px' },
-  shareBtn:     { width: '100%', padding: '14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(232,228,220,0.7)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  ssBtn:        { background: 'none', border: 'none', color: 'rgba(232,228,220,0.25)', fontSize: 12, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px' },
+  shareBtn:     { width: '100%', padding: '14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(255,255,255,0.5)', fontSize: 14, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  ssBtn:        { background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', fontSize: 12, cursor: 'pointer', fontFamily: "'Syne',sans-serif", display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px' },
 };

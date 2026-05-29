@@ -170,7 +170,7 @@ export function ShareLinkPlayer() {
     return (
       <div style={g.wrap}>
         <div style={g.card}>
-          <div style={g.logo}>WAV<span style={{ color: '#c9f55e' }}>R</span></div>
+          <div style={g.logo}>WAV<span style={{ color: 'rgba(255,255,255,0.85)' }}>R</span></div>
           <p style={g.hint}>This link is password protected.</p>
           <input
             style={g.input} type="password" placeholder="Enter password"
@@ -193,7 +193,7 @@ export function ShareLinkPlayer() {
 
   if (status === 'error') return (
     <div style={s.center}>
-      <div style={s.logo}>WAV<span style={{ color: '#c9f55e' }}>R</span></div>
+      <div style={s.logo}>WAV<span style={{ color: 'rgba(255,255,255,0.85)' }}>R</span></div>
       <p style={{ color: 'rgba(232,228,220,0.4)', marginTop: 16, fontSize: 14 }}>{errorMsg}</p>
     </div>
   );
@@ -220,7 +220,7 @@ export function ShareLinkPlayer() {
 
         {/* Top bar */}
         <div style={s.topbar}>
-          <div style={s.logo}>WAV<span style={{ color: '#c9f55e' }}>R</span></div>
+          <div style={s.logo}>WAV<span style={{ color: 'rgba(255,255,255,0.85)' }}>R</span></div>
           {data.artistName && <span style={s.artistName}>{data.artistName}</span>}
         </div>
 
@@ -304,7 +304,7 @@ export function ShareLinkPlayer() {
         {/* WAVR branding footer */}
         <div style={s.footer}>
           <span style={s.footerText}>Shared via </span>
-          <span style={s.footerBrand}>WAV<span style={{ color: '#c9f55e' }}>R</span></span>
+          <span style={s.footerBrand}>WAV<span style={{ color: 'rgba(255,255,255,0.85)' }}>R</span></span>
         </div>
       </div>
 
@@ -326,7 +326,7 @@ export function ShareLinkPlayer() {
 
 const s: Record<string, React.CSSProperties> = {
   center:      { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0a0a0b', gap: 8 },
-  spinner:     { width: 24, height: 24, border: '2px solid rgba(255,255,255,0.1)', borderTop: '2px solid #c9f55e', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
+  spinner:     { width: 24, height: 24, border: '2px solid rgba(255,255,255,0.1)', borderTop: '2px solid rgba(255,255,255,0.85)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
   topbar:      { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10 },
   logo:        { fontSize: 20, fontWeight: 800, letterSpacing: '-0.04em', color: '#e8e4dc' },
   artistName:  { fontSize: 12, color: 'rgba(232,228,220,0.4)' },
@@ -337,7 +337,7 @@ const s: Record<string, React.CSSProperties> = {
   trackTitle:  { fontSize: 22, fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 6, color: '#e8e4dc' },
   trackSub:    { fontSize: 12, color: 'rgba(232,228,220,0.35)' },
   timeLabel:   { fontSize: 11, color: 'rgba(232,228,220,0.3)', fontFamily: "'DM Mono', monospace" },
-  playBtn:     { width: 72, height: 72, borderRadius: '50%', background: '#c9f55e', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0a0a0b', flexShrink: 0 },
+  playBtn:     { width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.85)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0a0a0b', flexShrink: 0 },
   skipBtn:     { background: 'none', border: 'none', color: 'rgba(232,228,220,0.5)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, fontSize: 22 },
   skipLabel:   { fontSize: 10, fontFamily: "'DM Mono', monospace", color: 'rgba(232,228,220,0.3)' },
   actionBtn:   { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '14px', background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'rgba(232,228,220,0.7)', fontSize: 14, textDecoration: 'none', fontFamily: "'Syne', sans-serif" },
@@ -354,5 +354,5 @@ const g: Record<string, React.CSSProperties> = {
   hint:  { fontSize: 13, color: 'rgba(232,228,220,0.4)' },
   input: { padding: '12px 14px', background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.12)', borderRadius: 8, color: '#e8e4dc', fontSize: 14, outline: 'none', fontFamily: "'Syne', sans-serif" },
   err:   { fontSize: 12, color: '#ff6b6b' },
-  btn:   { padding: '12px', background: '#c9f55e', border: 'none', borderRadius: 8, color: '#0a0a0b', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: "'Syne', sans-serif" },
+  btn:   { padding: '12px', background: 'rgba(255,255,255,0.85)', border: 'none', borderRadius: 8, color: '#0a0a0b', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: "'Syne', sans-serif" },
 };

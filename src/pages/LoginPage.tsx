@@ -43,7 +43,7 @@ export function LoginPage() {
       <div style={s.grain} />
 
       <div style={s.card}>
-        <div style={s.logo}>WAV<span style={{ color: '#c9f55e' }}>R</span></div>
+        <div style={s.logo}>WAV<span style={{ color: 'rgba(255,255,255,0.85)' }}>R</span></div>
         <p style={s.tagline}>Your studio. Anywhere.</p>
 
         <div style={s.tabs}>
@@ -145,13 +145,13 @@ const s: Record<string, React.CSSProperties> = {
     fontFamily: "'Syne', sans-serif", outline: 'none',
   },
   error:   { fontSize: 12, color: '#ff6b6b', marginBottom: 10 },
-  success: { fontSize: 12, color: '#c9f55e', marginBottom: 10 },
+  success: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginBottom: 10 },
   btn: {
-    padding: '12px', background: '#c9f55e', border: 'none',
+    padding: '12px', background: 'rgba(255,255,255,0.85)', border: 'none',
     borderRadius: 8, color: '#0a0a0b', fontSize: 14,
     fontWeight: 700, cursor: 'pointer', marginBottom: 16,
     fontFamily: "'Syne', sans-serif",
   },
   hint:  { fontSize: 12, color: 'rgba(232,228,220,0.3)', textAlign: 'center' },
-  link:  { color: '#c9f55e', cursor: 'pointer', textDecoration: 'underline' },
+  link:  { color: 'rgba(255,255,255,0.85)', cursor: 'pointer', textDecoration: 'underline' },
 };
